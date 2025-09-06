@@ -13,6 +13,11 @@
 #include "sfml_events_handler.hpp"
 #include "sfml_renderer.hpp"
 
+#include "mandelbrot_fractal_utils.hpp"
+
+#include <chrono>
+#include <iostream>
+
 using namespace std::chrono_literals;
 class FrameClock {
 public:
@@ -27,8 +32,9 @@ private:
 
 class WaitForFPS {
 public:
-
 };
+
+int Test() { return 0; }
 
 class MandelbrotApp {
 private:
@@ -50,6 +56,7 @@ public:
         texture_.create(render_settings_.width, render_settings_.height);
 
         window_.setKeyRepeatEnabled(false);
+        window_.clear(sf::Color(255, 255, 255));
     }
 
     void Run() {
@@ -57,23 +64,25 @@ public:
         sf::Clock zoom_clock;
 
         auto pipeline = SfmlEventHandler{window_, render_settings_, state_, zoom_clock} |  //
-                        stdexec::let_value([this]() {                                      //
-                            return CalculateMandelbrotAsyncSender{state_, render_settings_, renderer_};
-                        }) |
-                        stdexec::let_value([this](RenderResult data) {
+                        stdexec::let_value(
+                            [this]() { return CalculateMandelbrotAsyncSender{state_, render_settings_, renderer_}; }) |
+                        stdexec::let_value([&](RenderResult data) {
                             return SFMLRender{std::move(data), image_, texture_, sprite_, window_, render_settings_};
-                        }) |  //
-                        stdexec::then(WaitForFPS{frame_clock, 60});
+                        }) |
+                        stdexec::then([this]() { return; });  //
+                                                              // stdexec::then(WaitForFPS{frame_clock, 60});
 
         auto repeated_pipeline =
             std::move(pipeline) | stdexec::then([this]() { return state_.should_exit; }) | exec::repeat_effect_until();
 
-        stdexec::sync_wait(std::move(repeated_pipeline));
+        // Основной поток обрабатывает события
+        stdexec::sync_wait(repeated_pipeline);
     }
 };
 
 int main() {
     try {
+
         MandelbrotApp app;
         app.Run();
     } catch (const std::exception &e) {

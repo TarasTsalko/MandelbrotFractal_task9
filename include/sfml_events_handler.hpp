@@ -7,6 +7,7 @@
 
 class SfmlEventHandler {
 public:
+    using sender_concept = stdexec::sender_t;
 
     template <typename Receiver>
     struct OperationState {
@@ -24,18 +25,45 @@ public:
             : receiver_{std::forward<R>(r)}, window_{window}, render_settings_{render_settings}, state_{state},
               zoom_clock_{zoom_clock} {}
 
-        
         /* Ваш код здесь  */
+        void start() noexcept {
+            HandleEvents();
+            // stdexec::set_value(receiver_);
+            if (state_.should_exit) {
+                // Если нужно выйти, завершаем sender
+                stdexec::set_value(receiver_);
+            }
+        }
 
     private:
         void HandleEvents() {
             sf::Event event;
-            while (window_.pollEvent(event)) {
+            while (window_.isOpen()) {
+                window_.pollEvent(event);
                 switch (event.type) {
+                case sf::Event::Closed: {
+                    // Обработка закрытия окна
+                    state_.should_exit = false;
+                    break;
+                }
+                case sf::Event::KeyPressed: {
+                    if (event.key.code == sf::Keyboard::Escape) {
+                        state_.should_exit = true;  // Дополнительный способ выхода
+                    }
+                    break;
+                }
+                case sf::Event::Resized: {
 
-                /* Ваш код здесь  */
+                    // state_.left_mouse_pressed = true;
+                }
+
+                    /* Ваш код здесь  */
 
                 default:
+                    break;
+                }
+
+                if (state_.should_exit || state_.left_mouse_pressed) {
                     break;
                 }
             }
@@ -75,8 +103,18 @@ public:
 
     /* Ваш код здесь  */
 
-private:
+    template <typename Receiver>
+    auto connect(Receiver &&rx) const noexcept {
+        return OperationState<Receiver>(std::forward<Receiver>(rx), window_, render_settings_, state_, zoom_clock_);
+    }
 
+    template <typename Env>
+    auto get_completion_signatures(Env &&) const {
+        return stdexec::completion_signatures<stdexec::set_value_t(), stdexec::set_error_t(std::exception_ptr),
+                                              stdexec::set_error_t(std::error_code)>{};
+    }
+
+private:
     sf::RenderWindow &window_;
     RenderSettings render_settings_;
     AppState &state_;
