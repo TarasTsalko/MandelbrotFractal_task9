@@ -26,24 +26,23 @@ private:
         // Проверяем необходимость рендеринга
         if (!state_.need_rerender) {
             // Если рендеринг не нужен, возвращаем пустой результат
-            stdexec::set_value(std::move(receiver_), RenderResult{});
-            return;
+            stdexec::set_value(receiver_, RenderResult{});
         }
 
         // Запускаем асинхронное вычисление
         auto result = renderer_.RenderAsync<THREAD_POOL_SIZE>(state_.viewport, render_settings_);
-
-        auto result_sender = result | stdexec::then([this](RenderResult &&render_result) {
-                                 stdexec::set_value(receiver_, std::forward<RenderResult>(render_result));
-                             });
+        auto result_sender = result | stdexec::then([&](RenderResult &&rr) { render_result_ = std::move(rr); });
 
         stdexec::sync_wait(result_sender);
+        state_.need_rerender = false;
+        stdexec::set_value(receiver_, std::forward<RenderResult>(render_result_));
     }
 
     Receiver receiver_;
     AppState &state_;
     RenderSettings render_settings_;
     MandelbrotRenderer &renderer_;
+    RenderResult render_result_;
 };
 
 class CalculateMandelbrotAsyncSender {

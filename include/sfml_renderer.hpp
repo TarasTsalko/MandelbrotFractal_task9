@@ -57,6 +57,7 @@ private:
             try {
                 if (!render_result_.color_data.empty()) {
                     image_.create(render_settings_.width, render_settings_.height);
+                    texture_.create(render_settings_.width, render_settings_.height);
 
                     for (std::size_t y = 0; y < render_settings_.height; ++y) {
                         for (std::size_t x = 0; x < render_settings_.width; ++x) {
@@ -65,14 +66,11 @@ private:
                         }
                     }
 
+                    window_.clear();
                     texture_.loadFromImage(image_);
                     sprite_.setTexture(texture_);
-
-                    image_.saveToFile("output.png");
-
-                    /*window_.clear();
                     window_.draw(sprite_);
-                    window_.display();*/
+                    window_.display();
                 }
 
                 stdexec::set_value(receiver_);

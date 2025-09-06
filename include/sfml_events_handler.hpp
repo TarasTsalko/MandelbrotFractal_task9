@@ -29,7 +29,7 @@ public:
         void start() noexcept {
             HandleEvents();
             // stdexec::set_value(receiver_);
-            if (state_.should_exit) {
+            if (state_.should_exit || state_.need_rerender) {
                 // Если нужно выйти, завершаем sender
                 stdexec::set_value(receiver_);
             }
@@ -53,8 +53,12 @@ public:
                     break;
                 }
                 case sf::Event::Resized: {
-
-                    // state_.left_mouse_pressed = true;
+                    if (event.size.width != render_settings_.width || event.size.height != render_settings_.height) {
+                        state_.need_rerender = true;
+                        render_settings_.height = event.size.height;
+                        render_settings_.width = event.size.width;
+                        break;
+                    }
                 }
 
                     /* Ваш код здесь  */
@@ -63,7 +67,7 @@ public:
                     break;
                 }
 
-                if (state_.should_exit || state_.left_mouse_pressed) {
+                if (state_.should_exit || state_.need_rerender) {
                     break;
                 }
             }
