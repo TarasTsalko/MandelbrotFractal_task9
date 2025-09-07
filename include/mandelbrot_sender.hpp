@@ -17,6 +17,15 @@ struct MandelbrotOperationState {
 
     void operator()() noexcept {
         using namespace mandelbrot;
+
+        if (region_.start_row >= region_.end_row || region_.start_col >= region_.end_col) {
+            // Если регион пуст, отправляем ошибку
+            std::exception_ptr ex =
+                std::make_exception_ptr(std::invalid_argument("Empty or invalid pixel region specified"));
+            stdexec::set_error(receiver_, std::move(ex));
+            return;
+        }
+
         // Создаем матрицу для хранения результатов итераций
         PixelMatrix pixel_data(region_.end_row - region_.start_row,
                                std::vector<std::uint32_t>(region_.end_col - region_.start_col));
