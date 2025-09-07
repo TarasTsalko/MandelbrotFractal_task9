@@ -13,12 +13,6 @@ class MandelbrotRenderer {
 private:
     exec::static_thread_pool thread_pool_;
 
-private:
-    template <typename... Senders>
-    auto CombineSenders(Senders &&...senders) {
-        return stdexec::when_all((std::move(senders))...);
-    }
-
 public:
     explicit MandelbrotRenderer(std::uint32_t num_threads = std::thread::hardware_concurrency())
         : thread_pool_{num_threads} {}
