@@ -25,7 +25,6 @@ public:
             : receiver_{std::forward<R>(r)}, window_{window}, render_settings_{render_settings}, state_{state},
               zoom_clock_{zoom_clock} {}
 
-        /* Ваш код здесь  */
         void start() noexcept {
             HandleEvents();
             // stdexec::set_value(receiver_);
@@ -43,10 +42,11 @@ public:
                 switch (event.type) {
                 case sf::Event::Closed: {
                     // Обработка закрытия окна
-                    state_.should_exit = false;
+                    state_.should_exit = true;
                     break;
                 }
                 case sf::Event::KeyPressed: {
+                    std::cout << "DDDSSSSSS" << std::endl;
                     if (event.key.code == sf::Keyboard::Escape) {
                         state_.should_exit = true;  // Дополнительный способ выхода
                     }
@@ -79,8 +79,6 @@ public:
                         state_.right_mouse_pressed = false;
                     break;
                 }
-
-                    /* Ваш код здесь  */
 
                 default:
                     break;

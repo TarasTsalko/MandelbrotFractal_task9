@@ -13,7 +13,20 @@ public:
 
     void operator()() noexcept {
         try {
-            exec();
+            // Проверяем необходимость рендеринга
+            if (!state_.need_rerender) {
+                // Если рендеринг не нужен, возвращаем пустой результат
+                stdexec::set_value(receiver_, RenderResult{});
+            }
+
+            // Запускаем асинхронное вычисление
+            auto result = renderer_.RenderAsync<THREAD_POOL_SIZE>(state_.viewport, render_settings_);
+            auto result_sender = result | stdexec::then([&](RenderResult &&rr) { render_result_ = std::move(rr); });
+
+            stdexec::sync_wait(result_sender);
+            state_.need_rerender = false;
+            stdexec::set_value(receiver_, std::forward<RenderResult>(render_result_));
+
         } catch (...) {
             stdexec::set_error(std::move(receiver_), std::current_exception());
         }
@@ -22,22 +35,6 @@ public:
     void start() noexcept { (*this)(); }
 
 private:
-    void exec() {
-        // Проверяем необходимость рендеринга
-        if (!state_.need_rerender) {
-            // Если рендеринг не нужен, возвращаем пустой результат
-            stdexec::set_value(receiver_, RenderResult{});
-        }
-
-        // Запускаем асинхронное вычисление
-        auto result = renderer_.RenderAsync<THREAD_POOL_SIZE>(state_.viewport, render_settings_);
-        auto result_sender = result | stdexec::then([&](RenderResult &&rr) { render_result_ = std::move(rr); });
-
-        stdexec::sync_wait(result_sender);
-        state_.need_rerender = false;
-        stdexec::set_value(receiver_, std::forward<RenderResult>(render_result_));
-    }
-
     Receiver receiver_;
     AppState &state_;
     RenderSettings render_settings_;
