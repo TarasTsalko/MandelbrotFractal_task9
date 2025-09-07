@@ -60,6 +60,25 @@ public:
                         break;
                     }
                 }
+                case sf::Event::MouseWheelMoved: {
+                    HandleContinuousZoom();
+                    state_.need_rerender = true;
+                    break;
+                }
+                case sf::Event::MouseButtonPressed: {
+                    if (event.mouseButton.button == sf::Mouse::Left)
+                        state_.left_mouse_pressed = true;
+                    if (event.mouseButton.button == sf::Mouse::Right)
+                        state_.right_mouse_pressed = true;
+                    break;
+                }
+                case sf::Event::MouseButtonReleased: {
+                    if (event.mouseButton.button == sf::Mouse::Left)
+                        state_.left_mouse_pressed = false;
+                    if (event.mouseButton.button == sf::Mouse::Right)
+                        state_.right_mouse_pressed = false;
+                    break;
+                }
 
                     /* Ваш код здесь  */
 
@@ -88,15 +107,44 @@ public:
             }
         }
 
-        void ZoomToPoint(int pixel_x, int pixel_y, bool zoom_in, double factor = 0.8) {
+        void ZoomToPoint(int pixel_x, int pixel_y, bool zoom_in, double factor = 1.8) {
+            const double MIN_ZOOM_FACTOR = 0.001;
+            const double MAX_ZOOM_FACTOR = 1000.0;
+
             const double target_x = state_.viewport.x_min +
                                     (static_cast<double>(pixel_x) / render_settings_.width) * state_.viewport.width();
             const double target_y = state_.viewport.y_min +
                                     (static_cast<double>(pixel_y) / render_settings_.height) * state_.viewport.height();
 
             const double zoom_factor = zoom_in ? factor : (1.0 / factor);
+
+            // Текущий масштаб
+            const double current_zoom = state_.viewport.width() / render_settings_.width;
+
+            double new_zoom = current_zoom * zoom_factor;
+            new_zoom = std::max(MIN_ZOOM_FACTOR, std::min(MAX_ZOOM_FACTOR, new_zoom));
+
             const double new_width = state_.viewport.width() * zoom_factor;
             const double new_height = state_.viewport.height() * zoom_factor;
+
+            // Обновляем границы viewport, сохраняя целевую точку в центре
+            state_.viewport.x_min = target_x - new_width / 2.0;
+            state_.viewport.y_min = target_y - new_height / 2.0;
+            state_.viewport.x_max = target_x + new_width / 2.0;
+            state_.viewport.y_max = target_y + new_height / 2.0;
+
+            std::cout << "Zoom direction: " << (zoom_in ? "IN" : "OUT") << ", factor: " << factor
+                      << ", zoom_factor: " << zoom_factor << std::endl;
+
+            // Дополнительные проверки границ
+            if (state_.viewport.x_min < -2.5)
+                state_.viewport.x_min = -2.5;
+            if (state_.viewport.x_max > 1.5)
+                state_.viewport.x_max = 1.5;
+            if (state_.viewport.y_min < -2.0)
+                state_.viewport.y_min = -2.0;
+            if (state_.viewport.y_max > 2.0)
+                state_.viewport.y_max = 2.0;
 
             /* Ваш код обновления state_ здесь  */
         }
