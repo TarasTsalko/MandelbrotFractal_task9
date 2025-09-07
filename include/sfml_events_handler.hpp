@@ -105,22 +105,28 @@ public:
         }
 
         void ZoomToPoint(int pixel_x, int pixel_y, bool zoom_in, double factor = 1.8) {
-            const double MIN_ZOOM_FACTOR = 0.001;
-            const double MAX_ZOOM_FACTOR = 1000.0;
 
+            // Константы для ограничения масштаба
+            const double MIN_ZOOM_FACTOR = 0.001;  // Минимальный допустимый масштаб
+            const double MAX_ZOOM_FACTOR = 1000.0; // Максимальный допустимый масштаб
+
+            // Вычисляем координаты целевой точки в комплексных числах
             const double target_x = state_.viewport.x_min +
-                                    (static_cast<double>(pixel_x) / render_settings_.width) * state_.viewport.width();
+                                (static_cast<double>(pixel_x) / render_settings_.width) * state_.viewport.width();
             const double target_y = state_.viewport.y_min +
-                                    (static_cast<double>(pixel_y) / render_settings_.height) * state_.viewport.height();
+                                (static_cast<double>(pixel_y) / render_settings_.height) * state_.viewport.height();
 
+            // Определяем коэффициент масштабирования
             const double zoom_factor = zoom_in ? factor : (1.0 / factor);
 
-            // Текущий масштаб
+            // Получаем текущий масштаб
             const double current_zoom = state_.viewport.width() / render_settings_.width;
 
+            // Вычисляем новый масштаб с учетом ограничений
             double new_zoom = current_zoom * zoom_factor;
             new_zoom = std::max(MIN_ZOOM_FACTOR, std::min(MAX_ZOOM_FACTOR, new_zoom));
 
+            // Вычисляем новые размеры области просмотра
             const double new_width = state_.viewport.width() * zoom_factor;
             const double new_height = state_.viewport.height() * zoom_factor;
 
@@ -130,7 +136,7 @@ public:
             state_.viewport.x_max = target_x + new_width / 2.0;
             state_.viewport.y_max = target_y + new_height / 2.0;
 
-            // Дополнительные проверки границ
+            // Дополнительные проверки границ, чтобы не выйти за пределы множества Мандельброта
             if (state_.viewport.x_min < -2.5)
                 state_.viewport.x_min = -2.5;
             if (state_.viewport.x_max > 1.5)
@@ -139,8 +145,6 @@ public:
                 state_.viewport.y_min = -2.0;
             if (state_.viewport.y_max > 2.0)
                 state_.viewport.y_max = 2.0;
-
-            /* Ваш код обновления state_ здесь  */
         }
     };
 
