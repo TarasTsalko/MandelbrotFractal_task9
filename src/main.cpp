@@ -34,6 +34,33 @@ private:
 
 class WaitForFPS {
 public:
+    explicit WaitForFPS(FrameClock &clock, size_t fps) : clock_(clock), fps_(fps) {}
+
+    void operator()() const {
+        const auto frame_time = clock_.GetFrameTime();
+
+        // Рассчитываем максимально допустимую длительность кадра
+        // 1000 мс делим на желаемую частоту кадров (fps_)
+        // Например, при fps_ = 60 получаем 16.67 мс на кадр
+        const auto max_frame_duration = std::chrono::milliseconds(1000 / fps_);
+        // Преобразуем время кадра в миллисекунды для удобства вычислений
+        const auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(frame_time);
+        // Вычисляем время, которое нужно подождать до следующего кадра
+        // wait_time = максимально допустимая длительность - затраченное время
+        const auto wait_time = max_frame_duration - elapsed_time;
+
+        // Если время ожидания положительное - ждем
+        if (wait_time > std::chrono::milliseconds(0)) {
+            std::this_thread::sleep_for(wait_time);
+        }
+
+        // Обновляем счетчик времени кадра
+        clock_.Reset();
+    }
+
+private:
+    FrameClock &clock_;  // Ссылка на объект FrameClock
+    size_t fps_;         // Желаемая частота кадров
 };
 
 std::string get_thread_info() {
@@ -84,11 +111,10 @@ public:
                             std::cout << get_thread_info() << std::endl;
                             return SFMLRender{std::move(data), image_, texture_, sprite_, window_, render_settings_};
                         }) |
-                        stdexec::then([this]() {
+                        stdexec::then([&]() {
                             std::cout << get_thread_info() << std::endl;
-                            return;
-                        });  //
-                             // stdexec::then(WaitForFPS{frame_clock, 60});
+                            WaitForFPS{frame_clock, 60}();
+                        });
 
         auto repeated_pipeline =
             std::move(pipeline) | stdexec::then([this]() { return state_.should_exit; }) | exec::repeat_effect_until();
