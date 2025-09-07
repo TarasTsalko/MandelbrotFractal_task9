@@ -46,7 +46,6 @@ public:
                     break;
                 }
                 case sf::Event::KeyPressed: {
-                    std::cout << "DDDSSSSSS" << std::endl;
                     if (event.key.code == sf::Keyboard::Escape) {
                         state_.should_exit = true;  // Дополнительный способ выхода
                     }
@@ -130,9 +129,6 @@ public:
             state_.viewport.y_min = target_y - new_height / 2.0;
             state_.viewport.x_max = target_x + new_width / 2.0;
             state_.viewport.y_max = target_y + new_height / 2.0;
-
-            std::cout << "Zoom direction: " << (zoom_in ? "IN" : "OUT") << ", factor: " << factor
-                      << ", zoom_factor: " << zoom_factor << std::endl;
 
             // Дополнительные проверки границ
             if (state_.viewport.x_min < -2.5)
