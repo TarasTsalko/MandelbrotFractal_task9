@@ -27,6 +27,7 @@ struct RgbColors {
     RgbColors() = delete;
 
     inline static constexpr RgbColor BLACK = RgbColor{0, 0, 0};
+    inline static constexpr RgbColor WHITE = RgbColor{255, 255, 255};
 };
 
 [[nodiscard]] constexpr std::uint32_t CalculateIterationsForPoint(const Complex &c, std::uint32_t max_iterations,
@@ -36,6 +37,8 @@ struct RgbColors {
     const double escape_radius_squared = escape_radius * escape_radius;
 
     for (std::uint32_t i = 0; i < max_iterations; ++i) {
+        auto v = std::norm(z);
+
         if (std::norm(z) > escape_radius_squared) {
             return i;
         }
@@ -49,7 +52,7 @@ struct RgbColors {
                                                  const std::uint32_t screen_height) noexcept {
 
     const double real = viewport.x_min + (static_cast<double>(x) / screen_width) * viewport.width();
-    const double imag = viewport.y_min + (static_cast<double>(y) / screen_height) * viewport.height();
+    const double imag = viewport.y_max - (static_cast<double>(y) / screen_height) * viewport.height();
     return Complex{real, imag};
 }
 
@@ -57,7 +60,7 @@ struct RgbColors {
 
     // Точка принадлежит множеству Мандельброта
     if (iterations == max_iterations) {
-        return RgbColors::BLACK;
+        return RgbColors::WHITE;
     }
 
     // Переводим количество итераций в RGB цвет
