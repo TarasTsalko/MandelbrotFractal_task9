@@ -38,11 +38,12 @@ public:
 
     void operator()() const {
         const auto frame_time = clock_.GetFrameTime();
+        const int MILLISECONDS_IN_SECOND = 1000;
 
         // Рассчитываем максимально допустимую длительность кадра
         // 1000 мс делим на желаемую частоту кадров (fps_)
         // Например, при fps_ = 60 получаем 16.67 мс на кадр
-        const auto max_frame_duration = std::chrono::milliseconds(1000 / fps_);
+        const auto max_frame_duration = std::chrono::milliseconds(MILLISECONDS_IN_SECOND / fps_);
         // Преобразуем время кадра в миллисекунды для удобства вычислений
         const auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(frame_time);
         // Вычисляем время, которое нужно подождать до следующего кадра

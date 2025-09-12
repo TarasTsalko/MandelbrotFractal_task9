@@ -136,15 +136,16 @@ public:
             state_.viewport.x_max = target_x + new_width / 2.0;
             state_.viewport.y_max = target_y + new_height / 2.0;
 
+            const double MANDELBROT_X_MIN_BOUND = -2.5;
+            const double MANDELBROT_X_MAX_BOUND = 1.5;
+            const double MANDELBROT_Y_MIN_BOUND = -2.0;
+            const double MANDELBROT_Y_MAX_BOUND = 2.0;
+
             // Дополнительные проверки границ, чтобы не выйти за пределы множества Мандельброта
-            if (state_.viewport.x_min < -2.5)
-                state_.viewport.x_min = -2.5;
-            if (state_.viewport.x_max > 1.5)
-                state_.viewport.x_max = 1.5;
-            if (state_.viewport.y_min < -2.0)
-                state_.viewport.y_min = -2.0;
-            if (state_.viewport.y_max > 2.0)
-                state_.viewport.y_max = 2.0;
+            state_.viewport.x_min = std::max(state_.viewport.x_min, MANDELBROT_X_MIN_BOUND);
+            state_.viewport.x_max = std::min(state_.viewport.x_max, MANDELBROT_X_MAX_BOUND);
+            state_.viewport.y_min = std::max(state_.viewport.y_min, MANDELBROT_Y_MIN_BOUND);
+            state_.viewport.y_max = std::min(state_.viewport.y_max, MANDELBROT_Y_MAX_BOUND);
         }
     };
 
